@@ -1,0 +1,992 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#7049db">
+<title>Mole Mayhem!</title>
+<style>
+:root {
+  --purple: #7049db;
+  --dark: #292052;
+  --pink: #ff65a3;
+  --yellow: #ffdb58;
+  --mint: #7ae5bf;
+  --cream: #fff8e8;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  font-family: system-ui, sans-serif;
+}
+body {
+  background: linear-gradient(160deg, #8d67f3, #5c3cc3);
+  color: white;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+button, input { font: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 4px;
+}
+.app {
+  width: min(100%, 520px);
+  min-height: 100dvh;
+  margin: auto;
+  padding: max(16px, env(safe-area-inset-top))
+           18px
+           max(18px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.screen {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+}
+.screen.active { display: flex; }
+.center {
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+}
+.logo {
+  font-size: clamp(2.9rem, 11vw, 4.6rem);
+  line-height: 1;
+  font-weight: 1000;
+  letter-spacing: -3px;
+  text-shadow: 0 6px 0 #46318d;
+}
+.logo span { color: var(--yellow); }
+.subtitle {
+  font-size: 1.08rem;
+  opacity: .95;
+  line-height: 1.5;
+  max-width: 330px;
+}
+.hero {
+  font-size: 6rem;
+  filter: drop-shadow(0 12px 0 #49319d);
+  animation: float 2s ease-in-out infinite;
+}
+@keyframes float {
+  50% { transform: translateY(-12px) rotate(5deg); }
+}
+.panel {
+  width: 100%;
+  background: var(--cream);
+  color: var(--dark);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 9px 0 #49319d;
+}
+.panel label {
+  display: block;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+.name-input {
+  width: 100%;
+  padding: 15px;
+  border: 3px solid #e0d4ff;
+  border-radius: 16px;
+  font-size: 1.15rem;
+  text-align: center;
+  background: white;
+  color: var(--dark);
+}
+.big-button {
+  border: none;
+  border-radius: 20px;
+  padding: 17px 28px;
+  min-height: 60px;
+  background: var(--yellow);
+  color: var(--dark);
+  font-weight: 1000;
+  font-size: 1.35rem;
+  box-shadow: 0 6px 0 #d39e30;
+  transition: transform .12s, box-shadow .12s;
+  width: 100%;
+}
+.big-button:active {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 #d39e30;
+}
+.small-note {
+  font-size: .82rem;
+  opacity: .85;
+  line-height: 1.5;
+}
+.best-label {
+  background: #ffffff25;
+  padding: 10px 20px;
+  border-radius: 99px;
+  font-weight: 800;
+}
+.topbar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+.player-name {
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 55%;
+}
+.sound-button {
+  border: 2px solid #ffffff55;
+  border-radius: 13px;
+  background: #ffffff20;
+  color: white;
+  font-size: 1.3rem;
+  padding: 8px 12px;
+}
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 9px;
+  width: 100%;
+  margin: 8px 0 14px;
+}
+.stat {
+  background: #ffffff24;
+  border: 2px solid #ffffff25;
+  border-radius: 17px;
+  text-align: center;
+  padding: 10px 4px;
+}
+.stat small {
+  display: block;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.stat strong {
+  display: block;
+  font-size: 1.65rem;
+  font-weight: 1000;
+  font-variant-numeric: tabular-nums;
+}
+.timer-track {
+  width: 100%;
+  height: 12px;
+  background: #ffffff35;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.timer-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--mint);
+  border-radius: inherit;
+  transition: background .2s;
+}
+.message {
+  text-align: center;
+  min-height: 36px;
+  padding: 10px 0 0;
+  font-weight: 900;
+  color: var(--yellow);
+}
+.board {
+  width: 100%;
+  max-width: 430px;
+  margin: auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(8px, 2.5vw, 14px);
+  padding: 12px 0 20px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.hole {
+  position: relative;
+  aspect-ratio: 1 / 1.13;
+  border-radius: 50%;
+  overflow: hidden;
+  background: transparent;
+  touch-action: none;
+  cursor: pointer;
+}
+.hole::before {
+  content: "";
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: 3%;
+  height: 51%;
+  border-radius: 50%;
+  background: #37215c;
+  box-shadow: inset 0 8px 0 #281744;
+  z-index: 0;
+}
+.mole {
+  position: absolute;
+  width: 79%;
+  height: 78%;
+  left: 10.5%;
+  bottom: 12%;
+  transform: translateY(115%) scale(.82);
+  transition: transform .17s cubic-bezier(.2,1.4,.4,1);
+  border-radius: 47% 47% 39% 39%;
+  background: #b97951;
+  border: 3px solid #8c4d3a;
+  z-index: 1;
+  pointer-events: none;
+}
+.hole.up .mole {
+  transform: translateY(0) scale(1);
+}
+.hole.hit .mole {
+  transform: translateY(70%) scale(.7) rotate(15deg);
+}
+.mole::before, .mole::after {
+  content: "";
+  position: absolute;
+  top: 12%;
+  width: 24%;
+  height: 25%;
+  background: #dca27c;
+  border: 3px solid #8c4d3a;
+  border-radius: 50%;
+  z-index: -1;
+}
+.mole::before { left: -12%; }
+.mole::after { right: -12%; }
+.face {
+  position: absolute;
+  top: 32%;
+  left: 15%;
+  width: 70%;
+  height: 44%;
+  background: #efb997;
+  border-radius: 50%;
+}
+.eyes {
+  position: absolute;
+  top: 22%;
+  left: 18%;
+  right: 18%;
+  display: flex;
+  justify-content: space-between;
+}
+.eye {
+  width: 12%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #282039;
+}
+.nose {
+  position: absolute;
+  top: 42%;
+  left: 40%;
+  width: 20%;
+  height: 18%;
+  border-radius: 50%;
+  background: #f76e91;
+}
+.mouth {
+  position: absolute;
+  top: 63%;
+  left: 40%;
+  width: 20%;
+  height: 12%;
+  border-bottom: 3px solid #673c46;
+  border-radius: 50%;
+}
+.hole::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 27%;
+  border-radius: 50%;
+  background: #5bc38c;
+  border-top: 6px solid #8de9ae;
+  z-index: 2;
+  pointer-events: none;
+}
+.hole.golden .mole {
+  background: #ffce48;
+  border-color: #d89328;
+}
+.hole.golden .mole::before,
+.hole.golden .mole::after {
+  background: #ffe08c;
+  border-color: #d89328;
+}
+.hole.golden .face { background: #ffe8a8; }
+.hole.bomb .mole {
+  background: #40405c;
+  border-color: #25253e;
+}
+.hole.bomb .mole::before,
+.hole.bomb .mole::after {
+  background: #676783;
+  border-color: #25253e;
+}
+.hole.bomb .face { background: #8d8da5; }
+.hole.bomb .nose { background: #ff454f; }
+.spark {
+  position: absolute;
+  z-index: 5;
+  top: 10%;
+  left: 10%;
+  font-weight: 1000;
+  font-size: 1.35rem;
+  color: var(--yellow);
+  text-shadow: 0 2px 0 #38235d;
+  pointer-events: none;
+  animation: spark .65s ease-out forwards;
+}
+@keyframes spark {
+  to { transform: translateY(-45px) scale(1.3); opacity: 0; }
+}
+.instructions {
+  text-align: center;
+  font-size: .83rem;
+  opacity: .9;
+  padding-bottom: 8px;
+}
+.result-score {
+  font-size: 5rem;
+  line-height: 1;
+  font-weight: 1000;
+  color: var(--yellow);
+  text-shadow: 0 6px 0 #49319d;
+}
+.result-card {
+  width: 100%;
+  padding: 20px;
+  border-radius: 22px;
+  background: #ffffff20;
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+}
+.result-card div { text-align: center; }
+.result-card small { display: block; opacity: .8; }
+.result-card strong { font-size: 1.5rem; }
+@media (max-height: 700px) {
+  .app { padding-top: 8px; padding-bottom: 8px; }
+  .stats { margin: 3px 0 8px; }
+  .stat { padding: 5px 3px; }
+  .stat strong { font-size: 1.3rem; }
+  .board { max-width: 350px; padding: 3px 0; }
+  .message { min-height: 25px; padding-top: 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero { animation: none; }
+  .mole { transition-duration: .05s; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+
+  <!-- TITLE SCREEN -->
+  <section id="titleScreen" class="screen center active">
+    <div class="hero" aria-hidden="true">🐹</div>
+    <div class="logo">MOLE<br><span>MAYHEM!</span></div>
+    <div class="subtitle">
+      Tiny troublemakers. Big tapping energy.
+      Catch them before they disappear!
+    </div>
+
+    <div class="panel">
+      <label for="nameInput">WHAT'S YOUR FIRST NAME?</label>
+      <input
+        id="nameInput"
+        class="name-input"
+        type="text"
+        maxlength="18"
+        placeholder="Enter your name"
+        autocomplete="given-name"
+      >
+      <div style="height:18px"></div>
+      <button id="playButton" class="big-button">
+        PLAY! 🚀
+      </button>
+    </div>
+
+    <div class="best-label">
+      🏆 Best Score: <span id="titleBest">0</span>
+    </div>
+    <div class="small-note">
+      Tap or swipe across moles.<br>
+      Gold = bonus points. Dark moles = avoid!<br>
+      Keyboard: 1–9. You have 45 seconds.
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="gameScreen" class="screen">
+    <div class="topbar">
+      <div class="player-name">
+        👋 <span id="playerDisplay">Player</span>
+      </div>
+      <button
+        id="soundButton"
+        class="sound-button"
+        aria-label="Toggle sound"
+        aria-pressed="true"
+      >🔊</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <small>SCORE</small>
+        <strong id="scoreDisplay">0</strong>
+      </div>
+      <div class="stat">
+        <small>TIME</small>
+        <strong id="timeDisplay">45</strong>
+      </div>
+      <div class="stat">
+        <small>LEVEL</small>
+        <strong id="levelDisplay">1</strong>
+      </div>
+    </div>
+
+    <div class="timer-track">
+      <div id="timerFill" class="timer-fill"></div>
+    </div>
+
+    <div id="message" class="message" aria-live="polite">
+      READY, SET, WHACK!
+    </div>
+
+    <div id="board" class="board" aria-label="Nine mole holes">
+    </div>
+
+    <div class="instructions">
+      👆 Tap or swipe • ⭐ Gold +3 • 💣 Dark −2
+    </div>
+  </section>
+
+  <!-- GAME OVER SCREEN -->
+  <section id="overScreen" class="screen center">
+    <div class="hero" id="resultEmoji">🎉</div>
+    <div class="logo" style="font-size:3.1rem">
+      TIME'S <span>UP!</span>
+    </div>
+    <div id="resultGreeting" class="subtitle"></div>
+    <div id="finalScore" class="result-score">0</div>
+    <div id="resultMessage" class="subtitle"></div>
+
+    <div class="result-card">
+      <div>
+        <small>🏆 BEST</small>
+        <strong id="finalBest">0</strong>
+      </div>
+      <div>
+        <small>🎯 HITS</small>
+        <strong id="finalHits">0</strong>
+      </div>
+      <div>
+        <small>⚡ LEVEL</small>
+        <strong id="finalLevel">1</strong>
+      </div>
+    </div>
+
+    <button id="againButton" class="big-button">
+      PLAY AGAIN! 🔥
+    </button>
+    <button id="homeButton" class="sound-button">
+      ← Back to title
+    </button>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const GAME_SECONDS = 45;
+const BEST_KEY = "moleMayhemBestV1";
+const NAME_KEY = "moleMayhemNameV1";
+
+let best = 0;
+let playerName = "Player";
+let score = 0;
+let hits = 0;
+let level = 1;
+let running = false;
+let muted = false;
+let audioContext = null;
+
+let startTime = 0;
+let endTime = 0;
+let lastFrame = 0;
+let nextSpawn = 0;
+let animationId = null;
+let session = 0;
+let moles = [];
+let pointerActive = false;
+let pointerVisited = new Set();
+
+function readStorage(key, fallback) {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // Game remains playable when storage is unavailable.
+  }
+}
+
+best = Math.max(0, Number(readStorage(BEST_KEY, "0")) || 0);
+$("titleBest").textContent = best;
+$("nameInput").value = readStorage(NAME_KEY, "");
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.toggle("active", screen.id === id);
+  });
+}
+
+function initAudio() {
+  if (audioContext) {
+    if (audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+    return;
+  }
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) return;
+  try {
+    audioContext = new AudioCtor();
+    if (audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+  } catch {
+    audioContext = null;
+  }
+}
+
+function beep(freq, duration, type = "sine", volume = 0.12, delay = 0) {
+  if (muted || !audioContext || audioContext.state !== "running") {
+    return;
+  }
+  const now = audioContext.currentTime + delay;
+  const osc = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  osc.frequency.exponentialRampToValueAtTime(
+    Math.max(40, freq * 0.65),
+    now + duration
+  );
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.start(now);
+  osc.stop(now + duration + 0.02);
+}
+
+function sound(kind) {
+  if (kind === "hit") {
+    beep(600, 0.09, "sine");
+    beep(880, 0.12, "sine", 0.1, 0.07);
+  } else if (kind === "gold") {
+    beep(650, 0.09, "triangle");
+    beep(900, 0.09, "triangle", 0.12, 0.08);
+    beep(1250, 0.16, "triangle", 0.12, 0.16);
+  } else if (kind === "bomb") {
+    beep(170, 0.23, "sawtooth", 0.08);
+  } else if (kind === "start") {
+    beep(440, 0.1, "triangle");
+    beep(660, 0.1, "triangle", 0.1, 0.12);
+    beep(880, 0.2, "triangle", 0.12, 0.24);
+  } else if (kind === "end") {
+    beep(660, 0.18, "triangle");
+    beep(440, 0.18, "triangle", 0.1, 0.18);
+    beep(330, 0.28, "triangle", 0.1, 0.36);
+  }
+}
+
+function makeBoard() {
+  const board = $("board");
+  board.replaceChildren();
+  moles = [];
+
+  for (let i = 0; i < 9; i++) {
+    const hole = document.createElement("div");
+    hole.className = "hole";
+    hole.dataset.index = i;
+    hole.setAttribute("role", "button");
+    hole.setAttribute("aria-label", "Hole " + (i + 1));
+    hole.setAttribute("tabindex", "-1");
+
+    hole.innerHTML = `
+      <div class="mole">
+        <div class="face">
+          <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+          </div>
+          <div class="nose"></div>
+          <div class="mouth"></div>
+        </div>
+      </div>
+    `;
+
+    board.appendChild(hole);
+
+    moles.push({
+      element: hole,
+      active: false,
+      type: "normal",
+      expires: 0,
+      token: 0
+    });
+  }
+}
+
+function updateHUD(remaining = GAME_SECONDS) {
+  $("scoreDisplay").textContent = score;
+  $("timeDisplay").textContent = Math.ceil(remaining);
+  $("levelDisplay").textContent = level;
+
+  const percent = Math.max(0, remaining / GAME_SECONDS * 100);
+  $("timerFill").style.width = percent + "%";
+  $("timerFill").style.background =
+    remaining <= 10 ? "#ff6984" : "#7ae5bf";
+}
+
+function startGame() {
+  initAudio();
+
+  const entered = $("nameInput").value.trim();
+  playerName = entered.slice(0, 18) || "Player";
+  writeStorage(NAME_KEY, entered);
+
+  $("playerDisplay").textContent = playerName;
+
+  session++;
+  if (animationId !== null) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  score = 0;
+  hits = 0;
+  level = 1;
+  running = true;
+  pointerActive = false;
+  pointerVisited.clear();
+
+  makeBoard();
+  updateHUD();
+  $("message").textContent = "READY, SET, WHACK!";
+  showScreen("gameScreen");
+
+  const now = performance.now();
+  startTime = now;
+  endTime = now + GAME_SECONDS * 1000;
+  lastFrame = now;
+  nextSpawn = now + 450;
+
+  sound("start");
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+function difficulty(elapsedSeconds) {
+  // Difficulty increases every 8 seconds.
+  level = Math.min(6, 1 + Math.floor(elapsedSeconds / 8));
+
+  return {
+    visible: Math.max(470, 1350 - (level - 1) * 165),
+    interval: Math.max(310, 1000 - (level - 1) * 130),
+    maxActive: level >= 4 ? 3 : level >= 2 ? 2 : 1
+  };
+}
+
+function spawnMole(now, settings) {
+  const activeCount = moles.filter(m => m.active).length;
+  if (activeCount >= settings.maxActive) return;
+
+  const available = moles.filter(m => !m.active);
+  if (!available.length) return;
+
+  const mole = available[Math.floor(Math.random() * available.length)];
+  const roll = Math.random();
+
+  mole.type = roll < 0.12
+    ? "golden"
+    : (level >= 3 && roll < 0.23 ? "bomb" : "normal");
+
+  mole.active = true;
+  mole.expires = now + settings.visible * (0.85 + Math.random() * 0.3);
+  mole.token++;
+
+  mole.element.className = "hole up";
+  if (mole.type === "golden") mole.element.classList.add("golden");
+  if (mole.type === "bomb") mole.element.classList.add("bomb");
+  mole.element.setAttribute(
+    "aria-label",
+    mole.type + " mole at hole " + (moles.indexOf(mole) + 1)
+  );
+}
+
+function hideMole(mole) {
+  mole.active = false;
+  mole.element.classList.remove("up");
+}
+
+function gameLoop(now) {
+  if (!running) return;
+
+  lastFrame = now;
+  const remaining = Math.max(0, (endTime - now) / 1000);
+  const elapsed = GAME_SECONDS - remaining;
+  const settings = difficulty(elapsed);
+
+  updateHUD(remaining);
+
+  if (remaining <= 0) {
+    finishGame();
+    return;
+  }
+
+  for (const mole of moles) {
+    if (mole.active && now >= mole.expires) {
+      hideMole(mole);
+    }
+  }
+
+  if (now >= nextSpawn) {
+    spawnMole(now, settings);
+    nextSpawn = now + settings.interval * (0.8 + Math.random() * 0.4);
+  }
+
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+function popup(hole, label) {
+  const spark = document.createElement("span");
+  spark.className = "spark";
+  spark.textContent = label;
+  hole.appendChild(spark);
+  setTimeout(() => spark.remove(), 700);
+}
+
+function whack(index) {
+  if (!running) return;
+
+  const mole = moles[index];
+  if (!mole || !mole.active) return;
+
+  // An active mole can only be scored once.
+  hideMole(mole);
+  mole.element.classList.add("hit");
+  const token = ++mole.token;
+
+  setTimeout(() => {
+    if (mole.token === token) {
+      mole.element.classList.remove("hit");
+    }
+  }, 180);
+
+  if (mole.type === "golden") {
+    score += 3;
+    hits++;
+    popup(mole.element, "+3 ⭐");
+    $("message").textContent = "GOLDEN WHACK! ⭐";
+    sound("gold");
+  } else if (mole.type === "bomb") {
+    score = Math.max(0, score - 2);
+    popup(mole.element, "−2 💥");
+    $("message").textContent = "OOPS! A TRICKY MOLE!";
+    sound("bomb");
+  } else {
+    score++;
+    hits++;
+    popup(mole.element, "+1");
+    $("message").textContent =
+      ["NICE!", "GREAT HIT!", "BOOM!", "KEEP GOING!"][
+        Math.floor(Math.random() * 4)
+      ];
+    sound("hit");
+  }
+
+  updateHUD(Math.max(0, (endTime - performance.now()) / 1000));
+}
+
+function finishGame() {
+  if (!running) return;
+
+  running = false;
+  session++;
+
+  if (animationId !== null) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  for (const mole of moles) {
+    mole.active = false;
+    mole.element.classList.remove("up");
+  }
+
+  const isRecord = score > best;
+  if (isRecord) {
+    best = score;
+    writeStorage(BEST_KEY, best);
+  }
+
+  $("finalScore").textContent = score;
+  $("finalBest").textContent = best;
+  $("finalHits").textContent = hits;
+  $("finalLevel").textContent = level;
+  $("titleBest").textContent = best;
+  $("resultGreeting").textContent = "Great game, " + playerName + "!";
+
+  if (isRecord) {
+    $("resultEmoji").textContent = "🏆";
+    $("resultMessage").textContent = "NEW PERSONAL BEST!";
+  } else if (score >= 35) {
+    $("resultEmoji").textContent = "🔥";
+    $("resultMessage").textContent = "You're a mole-whacking machine!";
+  } else if (score >= 18) {
+    $("resultEmoji").textContent = "🎯";
+    $("resultMessage").textContent = "Awesome reflexes!";
+  } else {
+    $("resultEmoji").textContent = "🐹";
+    $("resultMessage").textContent = "Those sneaky moles! Try again!";
+  }
+
+  showScreen("overScreen");
+  sound("end");
+}
+
+// Pointer controls: taps and swipes.
+// Pointer Events work with touch, mouse and compatible pens.
+const board = $("board");
+
+function indexFromPointer(event) {
+  const target = document.elementFromPoint(event.clientX, event.clientY);
+  const hole = target && target.closest(".hole");
+  if (!hole || !board.contains(hole)) return -1;
+  return Number(hole.dataset.index);
+}
+
+function handlePointerWhack(event) {
+  const index = indexFromPointer(event);
+  if (index < 0 || pointerVisited.has(index)) return;
+  pointerVisited.add(index);
+  whack(index);
+}
+
+board.addEventListener("pointerdown", event => {
+  if (!running) return;
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+
+  event.preventDefault();
+  initAudio();
+  pointerActive = true;
+  pointerVisited.clear();
+  handlePointerWhack(event);
+});
+
+board.addEventListener("pointermove", event => {
+  if (!running || !pointerActive) return;
+  if (event.pointerType === "mouse" && !(event.buttons & 1)) return;
+  event.preventDefault();
+  handlePointerWhack(event);
+});
+
+window.addEventListener("pointerup", () => {
+  pointerActive = false;
+  pointerVisited.clear();
+});
+
+window.addEventListener("pointercancel", () => {
+  pointerActive = false;
+  pointerVisited.clear();
+});
+
+window.addEventListener("blur", () => {
+  pointerActive = false;
+  pointerVisited.clear();
+});
+
+// Keyboard controls: 1-9 map to holes from left to right,
+// top row to bottom row. Numpad keys also work.
+document.addEventListener("keydown", event => {
+  if (event.key === "Enter" && $("titleScreen").classList.contains("active")) {
+    event.preventDefault();
+    startGame();
+    return;
+  }
+
+  if (event.key === "Enter" && $("overScreen").classList.contains("active")) {
+    event.preventDefault();
+    startGame();
+    return;
+  }
+
+  if (!running || event.repeat) return;
+
+  if (/^[1-9]$/.test(event.key)) {
+    event.preventDefault();
+    initAudio();
+    whack(Number(event.key) - 1);
+  }
+});
+
+// Button controls.
+$("playButton").addEventListener("click", startGame);
+$("againButton").addEventListener("click", startGame);
+
+$("homeButton").addEventListener("click", () => {
+  running = false;
+  session++;
+  if (animationId !== null) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+  showScreen("titleScreen");
+});
+
+$("soundButton").addEventListener("click", () => {
+  initAudio();
+  muted = !muted;
+  $("soundButton").textContent = muted ? "🔇" : "🔊";
+  $("soundButton").setAttribute("aria-pressed", String(!muted));
+  if (!muted) beep(660, 0.1);
+});
+
+// Prevent accidental context menus from long presses.
+board.addEventListener("contextmenu", event => event.preventDefault());
+
+// Refresh the best score shown on the title screen.
+$("titleBest").textContent = best;
+</script>
+</body>
+</html>
